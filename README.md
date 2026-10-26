@@ -1,135 +1,245 @@
-﻿# Human–AI Trust Prediction Lab
+﻿# AIoT HW2 | Regression Lab
 
-An independent AIoT HW2 application for **Multiple Linear Regression**, feature selection, OLS prediction intervals, and the six stages of CRISP-DM. React/TypeScript/Vite, Tailwind, a shadcn-style Radix/CVA button, Lucide, and Plotly on the frontend; FastAPI, pandas, NumPy, scikit-learn, statsmodels and SciPy on the backend.
+![Regression Lab homepage with the orange problem selector and neo-brutalist interface](docs/screenshots/overview.png)
 
-## Current verification status
+**Multiple Linear Regression, from raw data to an explainable prediction.** A React + FastAPI homework application with two built-in problems, user-provided CSVs, feature selection, model comparison, prediction intervals, and a six-stage CRISP-DM report.
 
-The primary dataset is the authentic Kaggle Human–AI Interaction version 1: 10,100 rows, 20 predictors (14 numerical, six categorical), and numerical `latent_trust_score`. It is **synthetic educational data**, not a real-user survey. Verified raw CSV: 100 duplicate rows, 4,245 missing cells including 201 missing targets. Target observations range from 38.374385 to 100 (documented scale 0–100). See `data/README.md` for provenance and `VERIFICATION.md` for actual checks.
+[Quick start](#quick-start) | [Analysis modes](#three-analysis-modes) | [Methodology](#regression-workflow) | [Results](#results-and-interpretation) | [Verification](#verification)
 
-Research objective: predict human trust in AI and explore associations with human experience, model accuracy, explainability, bias, interaction quality, and task context. No causal or real-population claims are supported.
+## The interface
 
-## Start locally
+Warm paper backgrounds, bold typography, thick black borders, hard shadows, cobalt actions, and orange/yellow/lime panels give the application a neo-brutalist visual identity. The design keeps data configuration, statistical evidence, and interpretation visible and understandable for classroom demonstrations.
 
-Prerequisites: Python **3.12**, Node **22 LTS**, internet access for dependencies and public CSV import. Memory requirements depend on imported CSV size and encoded design width. First install dependencies:
+- A large **CHOOSE YOUR PROBLEM** dropdown sits directly below the main heading.
+- A compact dropdown appears in the sticky header after the primary control scrolls out of view, and remains available in other analysis views.
+- Both dropdowns and the numbered mode cards use the same problem state.
+- Switching problems loads the relevant dataset/configuration and clears previous fitted results and predictions.
+- CSV import controls appear only for **Upload by User**.
+- Native keyboard-accessible dropdowns, visible focus states, responsive layouts, loading feedback, disabled duplicate actions, and explicit validation errors support the workflow.
+
+## Three analysis modes
+
+| Dropdown choice | Data | Target | How it works |
+| --- | --- | --- | --- |
+| **HW1 50-Startups** | Built-in `50_Startups.csv`, 50 rows and 5 columns | `Profit` | Automatically loads the dataset, target, and relevant predictors. No upload required. |
+| **Human-AI Trust Prediction** | Built-in Kaggle Human-AI Interaction, version 1; 10,100 rows and 21 columns | `latent_trust_score` | Automatically loads the acquired dataset and its 20 predictors. No upload required. |
+| **Upload by User** | Your UTF-8 CSV, uploaded locally or imported from a direct public HTTPS URL | A numerical column you select | Detects column types, previews rows, and lets you choose the target and feature columns. |
+
+The Human-AI mode is selected when the application first opens. The first numbered card retains the title **Problem 1**; its dropdown label is **HW1 50-Startups**.
+
+### HW1 50-Startups
+
+Predict business profit using these original predictors:
+
+| Predictor | Type |
+| --- | --- |
+| `R&D Spend` | Numerical |
+| `Administration` | Numerical |
+| `Marketing Spend` | Numerical |
+| `State` | Categorical; encoded relative to a reference state |
+
+The source is [Avik Jain's 100 Days of ML Code dataset](https://github.com/Avik-Jain/100-Days-Of-ML-Code/blob/master/datasets/50_Startups.csv). The backend uses a local cached CSV when available; otherwise it downloads that source. The 50-row dataset makes a held-out split small, so its metrics should be interpreted with that limitation in mind.
+
+### Human-AI Trust Prediction
+
+The project uses the authentic downloaded records from [Eshaal Malik's Human-AI Interaction dataset, version 1](https://www.kaggle.com/datasets/eshaalnmalik/human-ai-interaction/versions/1). The source describes the records as **synthetic educational data**, not a real-user survey; its recorded data-card license is CC0.
+
+| Predictor group | Columns |
+| --- | --- |
+| Human factors | `age`, `education_level`, `technical_experience`, `cognitive_load`, `prior_ai_exposure` |
+| AI factors | `model_accuracy`, `explainability_score`, `bias_level`, `decision_latency`, `error_rate` |
+| Interaction factors | `interaction_frequency`, `ui_complexity`, `feedback_quality`, `trust_history`, `override_frequency` |
+| Context | `task_risk`, `domain`, `time_pressure`, `cultural_factor`, `regulatory_strictness` |
+
+Verified source profile: 20 predictors (14 numerical and 6 categorical), 100 exact duplicate rows, and 4,245 missing cells including 201 missing targets. The documented target scale is 0-100; observed nonmissing scores range from approximately 38.374385 to 100.
+
+The acquisition script pins version 1 and records the source, schema, SHA-256 checksum, missingness, and duplicates in a local provenance manifest. The backend validates the checksum and version when loading. Missing or invalid source data produce an error rather than substitute records. See [dataset provenance](data/README.md).
+
+### Upload by User
+
+1. Select **Upload by User**.
+2. Choose **Upload CSV File** or **CSV URL**, then **Load Dataset**.
+3. Inspect the detected numerical/categorical types and preview rows.
+4. Select a numerical target and at least one suitable predictor. Exclude identifiers and target-derived information.
+5. Configure the split, seed, preprocessing, and selected-feature count, then run analysis.
+
+CSV headers must be unique and nonempty. Files must be UTF-8 comma-separated tables with a header row. Limits include 150 MB by default (configurable up to 200 MB), 2-100 columns, at least 12 rows, at most 1.5 million rows subject to a 30-million-cell limit, and at most 30 category levels per categorical predictor. The encoded design is limited to 100 columns and 30 million cells. Training also requires sufficient labeled rows for the selected design and a nonconstant numerical target.
+
+Custom configurations are retained in page memory when switching away and restored on return, while fitted outputs are cleared and require a new run. Failed replacement imports preserve the prior custom dataset and configuration. A browser refresh clears these drafts; expired backend sessions require reimport.
+
+## Quick start
+
+Use **Python 3.12** and **Node.js 22 LTS** with npm. Dependency installation and dataset acquisition require internet access. Commands below use Windows PowerShell; run them from the repository root unless indicated otherwise.
 
 ```powershell
+git clone https://github.com/lk000055668/Aiot-HW2.git
+cd Aiot-HW2
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r backend/requirements.txt
-python scripts/acquire_data.py
+.\.venv\Scripts\python.exe -m pip install -r backend/requirements.txt
+.\.venv\Scripts\python.exe scripts/acquire_data.py
 ```
 
-The acquisition script downloads version 1 through the official public Kaggle dataset API; no account credentials are required for this public dataset. If unavailable, it fails without substituting records. See [data/README.md](data/README.md). Startup and custom CSV imports remain available.
+The acquisition command downloads the pinned public Kaggle source and writes `data/human-ai-interaction.csv` and `data/trust-source.json`. No credentials are required by this public download implementation. Dataset files are excluded from Git; a fresh clone needs this step for the default Human-AI mode. If acquisition fails, the Startup and user-upload workflows remain available.
 
-Terminal 1, from the root:
+**Terminal 1 - backend:**
 
 ```powershell
-python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --workers 1
+.\.venv\Scripts\python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --workers 1
 ```
 
-Terminal 2:
+**Terminal 2 - frontend:**
 
 ```powershell
 cd frontend
-npm install
-npm run dev
+npm ci
+npm run dev -- --host 127.0.0.1
 ```
 
-Open **http://localhost:5173**. API docs: **http://localhost:8000/docs**. Built-in problems load automatically; click **Start Analysis**. For Custom Problem, import a CSV and choose its target/features first. The first run uses an 80/20 split and seed 42. Predictions and reports use the last successfully fitted configuration; changed controls apply on the next run.
+Open [the application](http://127.0.0.1:5173). API documentation is at [FastAPI /docs](http://127.0.0.1:8000/docs), and the health endpoint is `GET /api/health`.
 
-The `.env.example` documents configuration. For nondefault frontend URLs create `frontend/.env.local` with `VITE_API_URL=https://your-backend.example`. Export backend settings as process environment variables, or use uvicorn's `--env-file .env` after copying the root example. Never expose Kaggle secrets in frontend variables. CORS origins are comma-separated exact frontend origins without trailing slashes. VS Code extension recommendations are in `.vscode/extensions.json`; extensions do not replace the Python and Node runtimes.
+On macOS/Linux, create the same virtual environment and use `.venv/bin/python` instead of `.venv\Scripts\python.exe`.
 
-## Unified Problem Selection
+### A classroom demonstration
 
-The dashboard has exactly three choices: Problem 1 — Human–AI Trust Prediction; Problem 2 — Startup Profit Prediction; Custom Problem — Upload Your Dataset. There is no Dataset Source selector.
+1. Choose **HW1 50-Startups** in the orange dropdown; wait for its automatic dataset summary.
+2. Inspect the target, selected predictors, and preview. The default split is 80% training / 20% testing with seed 42.
+3. Click **Run Analysis**. Loading feedback appears while preprocessing, cross-validation, and fitting run.
+4. In **Evaluation**, compare models, inspect metrics, read the equation and interpretation, and examine the charts.
+5. In **Prediction**, enter a new observation and inspect its estimate and intervals.
+6. Export the **CRISP-DM Report** as Markdown or HTML.
+7. Switch to **Human-AI Trust Prediction** or **Upload by User** for a new analysis.
 
-Human–AI loads automatically on opening. Selecting a built-in automatically loads its fixed numerical target and relevant predictors, shows a Preconfigured Dataset summary, and offers Start Analysis. No manual import or target selection is needed.
+The hero's **Start Analysis** button scrolls to problem selection; **Run Analysis** performs model fitting. Changed controls apply to the next run. Predictions and exports use the last successfully fitted model.
 
-Only Custom Problem displays CSV URL and Upload CSV File buttons. Import a public HTTPS CSV or UTF-8 local file, inspect preview and detected types, choose a numerical target and configure predictors/k. The existing shared pipeline handles preprocessing, selection, both OLS models, evaluation, charts, intervals, predictions and reports. Both academic bonus features remain supported.
+## Regression workflow
 
-Leaving Custom Problem saves its dataset session, target, predictors, k, split, seed, scaling, deduplication, URL, file and import method in page memory. Returning restores configuration, checks the session, clears old model outputs and requires a fresh analysis. Changing import method keeps existing data/settings. Failed replacement imports preserve prior data and settings. Successful explicit replacements configure the new schema. Refreshing the page clears drafts. Expired sessions retain import choices but require reimport.
+Both built-in modes and custom data use the same backend pipeline:
 
-### Demonstration and verification
+1. Validate the numerical target and predictor columns; reject unsuitable identifiers and oversized designs.
+2. Remove rows with missing targets. Optionally remove exact duplicates over the chosen predictor/target columns before splitting (enabled by default).
+3. Split reproducibly using the selected test fraction (10-40%) and random seed.
+4. Fit median numerical imputation and most-frequent categorical imputation on **training data only**.
+5. Apply drop-first one-hot encoding, optional numerical standardization, and constant-column removal using the fitted preprocessing.
+6. Fit **Model A** using all retained encoded predictors and **Model B** using training-only `SelectKBest(f_regression)` with configurable `k`.
+7. Run three-fold training-only cross-validation, refitting preprocessing and selection within each fold, using up to 20,000 training rows.
+8. Match scikit-learn `LinearRegression` predictions against statsmodels OLS, evaluate the untouched test partition, and compute statistical intervals when the design supports them.
 
-Open the app, wait for the automatic built-in summary, and click Start Analysis. Switch to Startup and repeat. Choose Custom Problem and CSV URL, paste the professor-provided Startup URL, Load Dataset, select Profit and configure features/k, then Start Analysis. Inspect Evaluation, Prediction and CRISP-DM Report. Upload CSV File uses the same workflow.
+`k` is capped at the available encoded feature count. It is a user configuration, not an optimum chosen from the test set. Selection operates on encoded columns, so individual category levels can be retained or removed. Feature selection may improve or worsen held-out performance; repeatedly tuning against displayed test metrics compromises that evaluation.
 
-Run npm run test:e2e with TEST_TRUST=1 after starting the backend/frontend; npm run build verifies production assets. Run backend pytest with RUN_REAL_DATA=1. Browser tests cover desktop Chromium and iPhone 13 viewport using actual sources/models; only the explicitly marked source-failure scenario simulates an HTTP error. TEST_PORT, TEST_API_URL and TEST_EXTERNAL_SERVER support isolated servers. Generic validation and all secure URL/download limits remain unchanged.
+## Results and interpretation
 
-## Working features
+![Actual Startup regression results, metrics, and plain-language interpretation](docs/screenshots/results.png)
 
-- Eight navigable research views, responsive layouts, light/dark theme, and explicit busy/error states.
-- Human–AI Trust and Startup problem dropdown resets dataset, target, fitted result, charts and prediction state; both use the same backend ML functions.
-- Public HTTPS CSV ingestion and local upload with preview, type detection, numerical target and predictor selection.
-- Paginated data table, full numerical summaries/correlations (up to 40 columns in the heatmap), missingness, duplicates, sampled distributions and feature/target plots.
-- Training-only median/mode imputation, drop-first categorical encoding, optional scaling, constant-column removal, seeded split, optional exact duplicate removal and identifier exclusion.
-- Model A: all encoded nonconstant predictors. Model B: training-only SelectKBest/f_regression with configurable k. Three-fold training-only CV (up to 20,000 training rows) refits preprocessing and selection per fold; k is a user configuration, not optimized on the test set.
-- sklearn LinearRegression matched against statsmodels OLS; intercept/coefficient table and chart, sampled training VIF, condition number, Breusch–Pagan diagnostic, residual and Q-Q plots.
-- Full held-out R², MAE, MSE, RMSE, actual/predicted plots, unclipped classical 95% prediction and mean confidence intervals, all-test interval coverage and average width. Charts alone are sampled.
-- Dynamic numerical/categorical prediction inputs initialized from training data, extrapolation notices and explicit OLS bounds warnings.
-- Dataset-specific six-stage CRISP-DM report with source, checksum, settings, metrics, methodology, limitations and exportable JSON figure data. Plotly toolbars export each figure as PNG.
+Results use strong bordered panels, readable tables, and large interactive Plotly charts. The selected model can be changed between all features and selected features without retraining.
 
-## Statistical interpretation
+| Output | Meaning |
+| --- | --- |
+| **R-squared** | Held-out fit relative to predicting the held-out mean; negative values are possible. |
+| **Adjusted R-squared** | Statsmodels **training-fit** R-squared adjusted for model size; it is explicitly distinct from test R-squared. |
+| **MAE** | Mean absolute test error, in target units. |
+| **MSE** | Mean squared test error, giving larger errors more weight. |
+| **RMSE** | Square root of MSE, in target units. |
+| **Regression equation** | Fitted intercept plus the weighted retained encoded predictors. |
+| **Coefficients and VIF** | Direction and size in fitted model units, plus approximate training-sample multicollinearity diagnostics. |
+| **Actual vs. predicted** | Predictions compared with observed test values and an equality reference line. |
+| **Residual plots / Q-Q plot** | Evidence about residual structure, changing variance, outliers, and normality. |
+| **Prediction intervals** | Classical 95% intervals for new observations, plus held-out coverage and average width. |
+| **Dataset preview** | Rows and columns from the loaded dataset. |
 
-The prediction equation is `ŷ = intercept + Σ coefficient_j × encoded_input_j`. Scaling changes coefficient units. Coefficient magnitude and univariate F scores are not scientifically justified causal importance. Category effects are relative to a dropped reference category.
+Metrics cover the complete held-out partition; plotted observations are sampled to at most 300 points. Data Understanding also provides missingness, duplicates, numerical summaries, correlations, distributions, and a paginated row table.
 
-Prediction intervals use the **same fitted design**, estimated residual variance and residual degrees of freedom through statsmodels `get_prediction(...).summary_frame(alpha=0.05)`. Mean confidence intervals describe uncertainty about the conditional mean; prediction intervals additionally include new-observation variation. Singular designs still support point estimates but disable statistical intervals.
+The plain-language interpretation summarizes explained variation and absolute error, and lists positive and negative fitted associations. Whether performance is adequate depends on the target scale and intended application, not a universal R-squared threshold.
 
-Classical interval validity depends on linearity, independence, homoskedasticity and approximately normal errors. Diagnostics expose evidence; they cannot guarantee these conditions. Selected-model intervals condition on the selected design and omit selection uncertainty. Feature selection can worsen accuracy. Do not repeatedly tune k using displayed held-out test results. OLS trust predictions and intervals can extend beyond the documented [0,100] scale; neither is clipped. Synthetic data do not establish how real users behave. Categorical coefficients compare with omitted training reference levels; selection operates on encoded columns.
+### Equation and statistical limits
 
-## Tests and actual-data verification
+```text
+predicted target = intercept + sum(coefficient_j * encoded_input_j)
+```
 
-After dataset acquisition, set `$env:RUN_REAL_DATA='1'` to enable the real-data Python acceptance test, and `$env:TEST_TRUST='1'` to enable the trust browser workflow. Without these opt-ins those checks skip; startup browser checks still use real data. `GET /api/datasets/{id}/report?format=html` exports a self-contained report with SVG figures.
+A numerical coefficient describes the fitted prediction change for a one-unit input increase while holding other encoded inputs constant. With numerical standardization enabled, the unit is one training standard deviation. Categorical effects compare with the omitted training reference category. Different units and collinearity mean coefficient magnitudes are not directly comparable importance scores; neither coefficients nor F scores establish causality.
+
+Prediction intervals use statsmodels `get_prediction(...).summary_frame(alpha=0.05)` for the fitted OLS design. Mean confidence intervals describe uncertainty in the conditional mean; prediction intervals additionally include new-observation variation. Rank-deficient designs disable intervals. Classical validity depends on linearity, independence, constant error variance, and approximately normal errors; the diagnostics do not prove those conditions. Selected-model intervals omit selection uncertainty.
+
+OLS estimates and intervals are **not clipped** to 0-100. The Trust workflow flags out-of-range estimates and extrapolation beyond training input ranges. Synthetic trust data cannot validate real-user behavior or support causal/population claims.
+
+## CRISP-DM and exports
+
+Eight research views support the six-stage process: **Overview**, **Data Understanding**, **Data Preparation**, **Feature Selection**, **Modeling**, **Evaluation**, **Prediction**, and **CRISP-DM Report**.
+
+The report covers business understanding, data understanding, data preparation, modeling, evaluation, and deployment. It records dataset source/provenance, settings, methods, model metrics, limitations, and figure data. Export Markdown or a self-contained HTML report; download individual charts as PNG through the Plotly toolbar.
+
+## Configuration and deployment
+
+| Setting | Where | Default / purpose |
+| --- | --- | --- |
+| `VITE_API_URL` | `frontend/.env.local` | `http://localhost:8000`; frontend API origin. Rebuild production assets after changing it. |
+| `CORS_ORIGINS` | Backend environment | `http://localhost:5173,http://127.0.0.1:5173`; comma-separated exact frontend origins. |
+| `DATA_DIR` | Backend environment | Project `data` directory. |
+| `MAX_DATASETS` | Backend environment | 4 active dataset sessions, bounded to 1-8. |
+| `MAX_CSV_MB` | Backend environment | 150 MB default; capped at 200 MB. |
+
+See [.env.example](.env.example). Export backend variables in the process environment, or copy the example to `.env` and load it using uvicorn's `--env-file .env`. Keep credentials out of frontend variables and Git.
+
+For a production frontend build, run `npm run build` in `frontend`; output is `frontend/dist`. Vercel configuration is included: use `frontend` as the root directory and set `VITE_API_URL` to the backend's HTTPS origin. A root [Dockerfile](Dockerfile) and [Render blueprint](render.yaml) provide backend deployment configuration. Acquire the Trust dataset on the backend's mounted persistent data directory and configure CORS for the frontend origin. These are deployment files, not evidence of a public hosted application.
+
+Run **one backend worker / one instance**: dataset, job, and fitted-model state are process-local, addressed by opaque UUIDs, and expire after two hours. Restarting the backend loses sessions and models. One training job runs at a time. Larger public deployments need authentication, per-user quotas, shared state, and isolated job execution. URL imports enforce public HTTPS destinations, DNS/IP validation, redirect checks, and download limits.
+
+## Verification
+
+Current checks performed on **2026-10-26**:
+
+- **31 backend tests passed**, including the opt-in acquired-data test, using a workspace-local temporary directory. Two dependency warnings were reported.
+- The neo-brutalist frontend passed TypeScript compilation and a production build during the UI update.
+- A targeted browser check verified all three modes, automatic loading, stale-result clearing, custom-only uploads, shared selector state, keyboard focus, and desktop/mobile layouts during the selector update.
+- The screenshots above were captured from the running local app, including a fresh fit of the actual 50-Startups data.
+
+Reproduce backend checks and actual-data evaluation from the root:
 
 ```powershell
-python -m pytest backend/tests -q
-python scripts/evaluate_defaults.py
+$env:RUN_REAL_DATA='1'
+.\.venv\Scripts\python.exe -m pytest backend/tests -q --basetemp=.tools/pytest-local
+.\.venv\Scripts\python.exe scripts/evaluate_defaults.py
+```
+
+The evaluation script writes actual metrics, settings, coefficients, and default predictions to ignored `data/*-verification.json` files. Results depend on the source, seed, preprocessing, selected features, and `k`; screenshots are examples rather than universal performance claims.
+
+Frontend checks:
+
+```powershell
 cd frontend
 npm run build
 npx playwright install chromium
+$env:TEST_TRUST='1'
 npm run test:e2e
 ```
 
-Keep the backend running for browser tests. Playwright launches the Vite frontend itself. Tests target desktop Chrome and a mobile viewport, using actual startup CSV data through the real backend, and exercise URL import, dynamic targets, metrics, prediction and problem switching. Backend tests use deterministic, explicitly test-only fixtures for ingestion, security, splitting, imputation leakage, feature selection, OLS, independent-formula intervals, categorical prediction, dataset provenance and checksum tampering, API behavior and errors. The trust browser workflow skips unless TEST_TRUST is enabled; run acquisition before enabling it. `evaluate_defaults.py` saves actual metrics and predictions in ignored `data/*-verification.json` files and fails explicitly when data are unavailable. CI runs unit, build and browser checks on a network-enabled GitHub runner.
+The checked-in Playwright suite and GitHub Actions workflow predate the latest UI labels and selector placement. Some browser assertions still target the old interface and need updating; this README does **not** claim that the full legacy browser suite or current GitHub Actions run is green. [VERIFICATION.md](VERIFICATION.md) preserves earlier verification records.
 
-After the first successful `npm install`, commit its generated `frontend/package-lock.json` and use `npm ci` for subsequent reproducible installs. Top-level frontend dependencies are pinned and the resolved lockfile is now available.
+## Technology and repository structure
 
-## Deployment
+**Frontend:** React 18, TypeScript, Vite, Tailwind CSS, Radix/CVA button primitives, Lucide icons, and Plotly. **Backend:** FastAPI, pandas, NumPy, scikit-learn, statsmodels, SciPy, and threadpoolctl. **Checks:** pytest/httpx and Playwright; GitHub Actions configuration is included.
 
-### Frontend: Vercel
-
-Push this repository to your GitHub account. In Vercel import it with root directory **frontend**, framework **Vite**, build **npm run build**, output **dist**. Set `VITE_API_URL` to the deployed backend HTTPS origin, then deploy. Set backend `CORS_ORIGINS` to the exact Vercel origin, including any approved preview origins. Changing a Vite variable requires rebuilding.
-
-### Backend: Docker on Railway or another Python container host
-
-Build `Dockerfile` from the repository root. Use a single instance / **one uvicorn worker** with memory sized for the imported data. Set `PORT` as required by the host, `CORS_ORIGINS`, and `DATA_DIR=/app/data`. Attach a persistent volume at `/app/data`. Run `python scripts/acquire_data.py` in the container after the volume is mounted. Verify the generated source manifest and license rights before enabling public access. Dataset files and credentials are intentionally excluded from the Docker build and Git.
-
-Set health check `/api/health`. HTTPS termination and request body limits belong at the host/reverse proxy. Configure a maximum request body of **151 MB**, rate limits, a 60-second upload timeout, and restrict public access as appropriate. App limits include 150 MB CSVs (configurable up to 200), public-only DNS checks pinned through TLS connections, redirect revalidation, download timeouts, row/column/category/design limits, one concurrent training job, bounded dataset sessions, and two-hour session expiry.
-
-Models/datasets are process-local capability sessions addressed by random UUIDs. They are not an account/authentication system. A restart loses fitted models; reload and retrain. Do not scale workers or replicas without moving session/model state and jobs to shared durable storage/queue. For an internet-wide multi-user production service, add authentication, per-user quotas and an isolated job service; the included bounded single-instance design targets a classroom/research deployment. Do not upload sensitive datasets to a shared public instance.
-
-Verify health, Human–AI loading, both model metrics and interval plots, startup switching, URL import, upload and prediction on the deployed origins before claiming deployment is complete. No hosting credentials were supplied and no deployment was attempted here.
-
-### Render alternative
-
-The root `render.yaml` configures a Docker backend with a persistent data disk. Select a service size with enough memory for your acquired CSV and confirm pricing in your hosting account before creating it. Run the acquisition command after the disk is mounted; configure `CORS_ORIGINS` with your Vercel URL. Hosting configuration references: [Render Blueprint specification](https://render.com/docs/blueprint-spec) and [Vite on Vercel](https://vercel.com/docs/frameworks/frontend/vite). These files prepare deployment; they do not establish that one exists.
-
-## GitHub setup
-
-After installing Git and checking that no credentials or datasets are staged:
-
-```powershell
-git init
-git add .
-git status
-git commit -m "Build Human–AI Trust Prediction Lab"
-git branch -M main
-git remote add origin https://github.com/YOUR_ACCOUNT/YOUR_REPOSITORY.git
-git push -u origin main
+```text
+backend/
+  main.py                  API, bounded sessions, analysis jobs, predictions
+  data.py                  CSV ingestion, validation, dataset provenance
+  ml.py                    Shared preprocessing, fitting, evaluation, intervals
+  reporting.py             Markdown/HTML report generation
+  tests/                   Backend correctness and ingestion checks
+frontend/
+  src/main.tsx             Application state and research views
+  src/components/research.tsx  Hero, selectors, metrics, equation, interpretation
+  src/components/ui/       Reusable button component
+  src/style.css            Responsive neo-brutalist design system
+  tests/                   Browser workflows (legacy UI assertions noted above)
+scripts/
+  acquire_data.py          Pinned public Kaggle acquisition
+  evaluate_defaults.py     Reproducible real-data model evaluation
+  check_source.ps1         Source check helper
+data/README.md             Dataset sources and provenance notes
+docs/screenshots/          Website images embedded in this README
+Dockerfile / render.yaml   Backend deployment configuration
+.github/workflows/         Automated verification configuration
 ```
 
-Create the empty GitHub repository under your account first. Never force-add ignored data or Kaggle credentials. The included CI runs the automated checks after pushing; its outcome has not been verified here.
-
-## Repository layout
-
-`backend/data.py`: safe ingestion/provenance; `backend/ml.py`: reusable ML/statistics; `backend/main.py`: FastAPI sessions/jobs/reporting; `frontend/src/main.tsx`: research dashboard; `scripts/acquire_data.py`: official public dataset acquisition; `backend/tests` and `frontend/tests`: verification. [data/README.md](data/README.md) details attribution and access. [VERIFICATION.md](VERIFICATION.md) records unresolved checks.
-
+Dataset CSVs, provenance manifests, local environments, dependency directories, logs, generated reports/build output, and credentials are excluded from Git. Follow the acquisition instructions after cloning, and preserve source attribution when using or redistributing datasets.
