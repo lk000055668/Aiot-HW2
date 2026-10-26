@@ -153,7 +153,7 @@ When you decide to publish:
 4. When ready for public access, run it again with **publish checked**. Approve the `github-pages` environment if your repository requires approval.
 5. After success, visit `https://lk000055668.github.io/Aiot-HW2/` and verify the two built-ins, predictions, report downloads and charts.
 
-The workflow derives the base path from `github.event.repository.name`, installs Node dependencies, validates preserved-model and browser-training mathematics, builds, runs the static desktop/mobile tests and uploads a Pages artifact. Only an explicitly requested publish run grants the deploy job Pages write access. No Python service, Render account or Vercel account is needed for this static demo.
+The workflow uses Ubuntu 24.04 with its preinstalled Chrome (`PLAYWRIGHT_CHANNEL=chrome`), derives the base path from `github.event.repository.name`, installs Node dependencies, validates preserved-model and browser-training mathematics, builds, runs the static desktop/mobile tests and uploads a Pages artifact. Only an explicitly requested publish run grants the deploy job Pages write access. No Python service, Render account or Vercel account is needed for this static demo.
 
 ## Restore the pre-change version
 

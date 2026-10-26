@@ -15,11 +15,13 @@ jobs:
   build:
     # Playwright 1.51.1 supports 24.04; ubuntu-latest may now select unsupported 26.04.
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: frontend
     env:
       VITE_BASE_PATH: /${{ github.event.repository.name }}/
+      PLAYWRIGHT_CHANNEL: chrome
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -31,7 +33,8 @@ jobs:
       - run: npm run verify:static
       - run: npm run verify:browser
       - run: npm run build:static
-      - run: npx playwright install --with-deps chromium
+      # GitHub's Ubuntu image includes Chrome and its native dependencies.
+      - run: google-chrome --version
       - run: npm run test:static
       - uses: actions/upload-pages-artifact@v3
         with:
