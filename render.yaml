@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: human-ai-trust-api
+    runtime: docker
+    dockerfilePath: Dockerfile
+    dockerContext: .
+    # Size memory for the encoded dataset and a single training worker.
+    plan: standard
+    healthCheckPath: /api/health
+    envVars:
+      - key: CORS_ORIGINS
+        sync: false
+      - key: DATA_DIR
+        value: /app/data
+    disk:
+      name: trust-data
+      mountPath: /app/data
+      sizeGB: 2
