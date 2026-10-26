@@ -1,10 +1,62 @@
-﻿# AIoT HW2 | Regression Lab
+# AIoT HW2 | Regression Lab
 
-![Regression Lab homepage with the orange problem selector and neo-brutalist interface](docs/screenshots/overview.png)
+![Regression Lab homepage with the orange problem selector and neo-brutalist interface](docs/screenshots/homepage-2026-10-27.png)
 
 **Multiple Linear Regression, from raw data to an explainable prediction.** A React + FastAPI homework application with two built-in problems, user-provided CSVs, feature selection, model comparison, prediction intervals, and a six-stage CRISP-DM report.
 
-[Quick start](#quick-start) | [Analysis modes](#three-analysis-modes) | [Methodology](#regression-workflow) | [Results](#results-and-interpretation) | [Verification](#verification)
+[Quick start](#quick-start) | [Website screenshots](#website-screenshots) | [Analysis modes](#three-analysis-modes) | [Methodology](#regression-workflow) | [Results](#results-and-interpretation) | [Verification](#verification)
+
+## GitHub Pages: static demo, no Python server
+
+The existing interface now supports **two modes**. GitHub Pages preserves built-in JSON results and can also train real models from uploaded CSVs in a browser Web Worker; `npm run dev` retains the original full React + FastAPI application. This change prepares deployment locally and does **not** publish the site.
+
+| Feature | Static GitHub Pages mode | Local full mode |
+| --- | --- | --- |
+| Both built-in datasets, charts, metrics, coefficients and CRISP-DM reports | Preserved exports | Actual Python analysis |
+| Model A/B switching and live predictions with verified 95% intervals | In-browser | Backend API |
+| Change seed, split, k, scaling or predictors | Supported for uploaded CSV; built-in exports stay fixed | Supported |
+| Upload CSV and retrain | Real browser training: up to 10 MB / 20,000 rows | Supported with larger server limits |
+| Persistent Python backend | Not needed | Required |
+
+**Teacher upload workflow:** choose **Upload by User**, select a local CSV, click **Load Dataset**, choose a numerical target/features and click **Run Analysis**. Results, predictions, charts and report downloads work without Python. See [browser CSV analysis](docs/BROWSER_CSV.md) for limits, mathematical details and validation.
+
+**Static demo quick start** (uses committed exports):
+
+```powershell
+cd frontend
+npm ci
+npm run dev:static
+```
+
+Open `http://127.0.0.1:5173/Aiot-HW2/`. For production preview, run `npm run build:static` and `npm run preview:static`, then open `http://127.0.0.1:4173/Aiot-HW2/`.
+
+**Regenerate actual analyses** from the root: `.\.venv\Scripts\python.exe scripts/export_static.py`. This creates a new versioned export and preserves existing data/results. Then run `npm run verify:static` and `npm run build:static` in `frontend`.
+
+**Publish later:** push the reviewed files, set repository **Settings -> Pages -> Source -> GitHub Actions**, then manually run **Static GitHub Pages demo (manual)**. The workflow defaults to building/testing only; explicitly check `publish` when you want to make it public. The repository path is `/Aiot-HW2/`; the workflow derives it from the repository name.
+
+Verification: **440 preserved-model comparisons plus 3,390 browser-training numerical checks passed**, static desktop/mobile browser tests passed, and all seven original data/result checksums are unchanged. See [the verification record](docs/STATIC_VERIFICATION.md).
+
+See **[the complete static-mode guide](docs/STATIC_MODE.md)** for provenance, browser prediction mathematics, validation, configuration, deployment steps and restoring the pre-change snapshot. The remainder of this README describes the original local/full workflow unless a static-mode difference is stated.
+
+## Website screenshots
+
+The following screenshots show the application's main workflow. Images are stored in [`docs/screenshots/`](docs/screenshots/) and embedded with relative paths so they display when browsing the repository on GitHub.
+
+### Overview and problem selection
+
+The opening screenshot above shows the static demo with **HW1 50-Startups** selected. The orange **CHOOSE YOUR PROBLEM** dropdown switches between the two built-in datasets and **Upload by User**. The green banner identifies browser-only mode; built-in results come from preserved Python analyses.
+
+### CSV analysis in the browser
+
+![Browser-only CSV evaluation showing Upload by User, Model B, five regression metrics, and a plain-language interpretation](docs/screenshots/browser-csv-results.png)
+
+After uploading the 50-Startups CSV through **Upload by User** and running analysis, **Evaluation** displays the selected model, held-out metrics, and an interpretation of the fitted result. The status **Browser analysis complete / no backend** confirms that this example was trained in the browser. Browser CSV training uses its own documented shuffle, so its split and metrics can differ from the preserved Python results even with the same seed.
+
+### Local FastAPI analysis
+
+![Local full-mode evaluation of the 50-Startups dataset with regression metrics and interpretation](docs/screenshots/results.png)
+
+The local full application presents the same evaluation workflow using the FastAPI regression pipeline. Screenshot values illustrate the captured dataset and configuration; they are not expected results for every upload or split. See [results and interpretation](#results-and-interpretation) for metric definitions and statistical limits.
 
 ## The interface
 
@@ -69,6 +121,8 @@ Custom configurations are retained in page memory when switching away and restor
 
 ## Quick start
 
+These commands start **local full mode**, including FastAPI. For the no-backend version, use the static quick start above.
+
 Use **Python 3.12** and **Node.js 22 LTS** with npm. Dependency installation and dataset acquisition require internet access. Commands below use Windows PowerShell; run them from the repository root unless indicated otherwise.
 
 ```powershell
@@ -113,7 +167,7 @@ The hero's **Start Analysis** button scrolls to problem selection; **Run Analysi
 
 ## Regression workflow
 
-Both built-in modes and custom data use the same backend pipeline:
+In local full mode, both built-in modes and custom data use the same backend pipeline. Static-mode CSVs use the [equivalent browser pipeline](docs/BROWSER_CSV.md) with an explicitly recorded browser-specific shuffle:
 
 1. Validate the numerical target and predictor columns; reject unsuitable identifiers and oversized designs.
 2. Remove rows with missing targets. Optionally remove exact duplicates over the chosen predictor/target columns before splitting (enabled by default).
@@ -127,8 +181,6 @@ Both built-in modes and custom data use the same backend pipeline:
 `k` is capped at the available encoded feature count. It is a user configuration, not an optimum chosen from the test set. Selection operates on encoded columns, so individual category levels can be retained or removed. Feature selection may improve or worsen held-out performance; repeatedly tuning against displayed test metrics compromises that evaluation.
 
 ## Results and interpretation
-
-![Actual Startup regression results, metrics, and plain-language interpretation](docs/screenshots/results.png)
 
 Results use strong bordered panels, readable tables, and large interactive Plotly charts. The selected model can be changed between all features and selected features without retraining.
 

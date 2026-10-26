@@ -1,0 +1,56 @@
+name: Static GitHub Pages demo (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publish to GitHub Pages after verification (false only builds an artifact)'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      VITE_BASE_PATH: /${{ github.event.repository.name }}/
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run verify:static
+      - run: npm run verify:browser
+      - run: npm run build:static
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:static
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/dist-static
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: static-verification
+          path: frontend/test-results
+  deploy:
+    if: ${{ inputs.publish }}
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy verified artifact
+        id: deployment
+        uses: actions/deploy-pages@v4

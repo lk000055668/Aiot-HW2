@@ -1,0 +1,464 @@
+# Human–AI Trust Prediction Lab — CRISP-DM Report
+
+## 1. Business Understanding
+Estimate Profit using 4 predictors and Multiple Linear Regression. Educational regression analysis; associations do not establish causation.
+
+## 2. Data Understanding
+Dataset: Startup Profit. Source: https://raw.githubusercontent.com/Avik-Jain/100-Days-Of-ML-Code/master/datasets/50_Startups.csv.
+Observed rows: 50; columns: 5; duplicate rows: 0.
+SHA-256: 05cb3ed7eac0c35eeca94322c0fccaf67c4a65671135d791b8af938784cb1660.
+Missing values: {"R&D Spend": 0, "Administration": 0, "Marketing Spend": 0, "State": 0, "Profit": 0}.
+
+## 3. Data Preparation
+Median numeric / most-frequent categorical imputation, drop-first one-hot encoding; fit on training data only. SelectKBest f_regression selects encoded columns on training data. Fixed user k; three-fold training-only CV is descriptive, not test-set tuning.
+Train 40; test 10; seed 42; scaling False. Duplicates removed 0; missing targets removed 0.
+
+## 4. Modeling
+OLS via sklearn LinearRegression and matched statsmodels OLS. Model A uses all nonconstant encoded columns; Model B uses k=4 training-selected encoded columns.
+Raw predictors: R&D Spend, Administration, Marketing Spend, State.
+
+## 5. Evaluation
+| Model | R² | MAE | MSE | RMSE | PI coverage |
+|---|---:|---:|---:|---:|---:|
+| all | 0.896736 | 7124.24 | 8.36222e+07 | 9144.52 | 1.0 |
+| selected | 0.914692 | 6521.8 | 6.90816e+07 | 8311.53 | 1.0 |
+
+Metrics evaluate every held-out row. Dashboard figures alone are sampled.
+R² measures squared-error fit relative to a constant-mean reference; MAE is average absolute error, MSE average squared error, and RMSE is in target units.
+Classical 95% OLS prediction intervals assume linearity, independent errors, constant variance and approximately normal errors. Selected-model intervals condition on the selected design and omit selection uncertainty. Rank-deficient designs have intervals disabled. No outputs are clipped.
+A confidence interval estimates the conditional mean; a prediction interval includes additional individual-observation noise.
+Coefficients depend on units and multicollinearity and are not causal importance. Inspect residuals, Q-Q plots, sampled VIF, condition number and Breusch–Pagan diagnostics. Independence depends on data collection. Diagnostics cannot guarantee assumptions hold.
+
+## 6. Deployment
+Vite/React frontend and FastAPI backend support reproducible interactive analysis, prediction, CSV import and report export. Sessions/models are ephemeral. No public deployment is asserted.
+
+## Conclusion
+Selected-feature RMSE is 8311.53, compared with 9144.52 for all features. Selection reduced held-out RMSE. Do not tune k using this held-out comparison.
+
+## Figures and reproducibility data
+The dashboard renders actual/predicted, residual, residual distribution, Q-Q, interval and coefficient figures from these exact data. Save PNGs from Plotly toolbars for a submitted illustrated report.
+```json
+{
+  "target": "Profit",
+  "features": [
+    "R&D Spend",
+    "Administration",
+    "Marketing Spend",
+    "State"
+  ],
+  "train_count": 40,
+  "test_count": 10,
+  "seed": 42,
+  "test_size": 0.2,
+  "k": 4,
+  "scale": false,
+  "removed_missing_targets": 0,
+  "duplicates_found": 0,
+  "duplicates_removed": 0,
+  "constant_columns_removed": 0,
+  "encoded_features": 5,
+  "rankings": [
+    {
+      "feature": "R&D Spend",
+      "score": 676.1034669259968,
+      "selected": true
+    },
+    {
+      "feature": "Marketing Spend",
+      "score": 56.690678746324956,
+      "selected": true
+    },
+    {
+      "feature": "State_New York",
+      "score": 0.9286617690869536,
+      "selected": true
+    },
+    {
+      "feature": "State_Florida",
+      "score": 0.6012756848331952,
+      "selected": true
+    },
+    {
+      "feature": "Administration",
+      "score": 0.3119512559629181,
+      "selected": false
+    }
+  ],
+  "models": {
+    "all": {
+      "metrics": {
+        "r2": 0.8967362527435468,
+        "mae": 7124.244801419345,
+        "mse": 83622164.02848521,
+        "rmse": 9144.515516334652
+      },
+      "train_metrics": {
+        "r2": 0.9537233146645633,
+        "mae": 6641.874418159144,
+        "mse": 79663366.96629924,
+        "rmse": 8925.433713063989
+      },
+      "cv": {
+        "rmse_mean": 10519.997401672983,
+        "rmse_std": 1745.16576884091,
+        "rows": 40,
+        "folds": 3
+      },
+      "intercept": 54350.77747754189,
+      "coefficients": [
+        {
+          "feature": "R&D Spend",
+          "coefficient": 0.8047246469841682,
+          "vif": 2.5884579345631558
+        },
+        {
+          "feature": "Administration",
+          "coefficient": -0.07045642348139212,
+          "vif": 1.1804096881498323
+        },
+        {
+          "feature": "Marketing Spend",
+          "coefficient": 0.031057020055417724,
+          "vif": 2.7435163030575715
+        },
+        {
+          "feature": "State_Florida",
+          "coefficient": 532.4843301242192,
+          "vif": 1.4104623104635272
+        },
+        {
+          "feature": "State_New York",
+          "coefficient": -687.4737949420855,
+          "vif": 1.4039298704348164
+        }
+      ],
+      "sample": {
+        "actual": [
+          134307.35,
+          81005.76,
+          99937.59,
+          64926.08,
+          125370.37,
+          35673.41,
+          105733.54,
+          107404.34,
+          97427.84,
+          122776.86
+        ],
+        "predicted": [
+          126679.84281227167,
+          84968.09632090048,
+          98234.38346831172,
+          45779.96464570468,
+          128390.52194680402,
+          50453.86738883638,
+          109510.15019276709,
+          100840.354721737,
+          97704.36892595905,
+          112391.31111304852
+        ],
+        "residual": [
+          7627.5071877283335,
+          -3962.336320900489,
+          1703.20653168828,
+          19146.115354295325,
+          -3020.1519468040206,
+          -14780.457388836374,
+          -3776.610192767097,
+          6563.98527826299,
+          -276.52892595904996,
+          10385.548886951481
+        ],
+        "obs_ci_lower": [
+          106157.21775916348,
+          64177.55182376127,
+          76706.8737864693,
+          23725.78148785731,
+          107549.6782785755,
+          26616.521642377058,
+          88568.84911476064,
+          80346.65020505238,
+          76506.13800361773,
+          88856.84813146337
+        ],
+        "obs_ci_upper": [
+          147202.46786580258,
+          105758.64081652365,
+          119761.89315222461,
+          67834.14780266481,
+          149231.36561484728,
+          74291.21313521886,
+          130451.45127258994,
+          121334.0592393178,
+          118902.59985142248,
+          135925.77410048925
+        ],
+        "mean_ci_lower": [
+          120839.78852505767,
+          78246.87355512846,
+          89495.86138907919,
+          35814.26899762826,
+          121515.28669250986,
+          36994.775768805666,
+          102336.15647478426,
+          95102.75767843224,
+          89811.77180717835,
+          99476.24073404087
+        ],
+        "mean_ci_upper": [
+          132519.8970999084,
+          91689.31908515646,
+          106972.90554961472,
+          55745.66029289386,
+          135265.75720091292,
+          63912.959008790254,
+          116684.14391256632,
+          106577.95176593793,
+          105596.96604786186,
+          125306.38149791175
+        ]
+      },
+      "qq": {
+        "theoretical": [
+          -1.4987672753589756,
+          -0.9849466741389483,
+          -0.6470380273640686,
+          -0.371098189575024,
+          -0.12121408713229873,
+          0.12121408713229859,
+          0.371098189575024,
+          0.6470380273640689,
+          0.9849466741389483,
+          1.4987672753589756
+        ],
+        "observed": [
+          -14780.457388836374,
+          -3962.336320900489,
+          -3776.610192767097,
+          -3020.1519468040206,
+          -276.52892595904996,
+          1703.20653168828,
+          6563.98527826299,
+          7627.5071877283335,
+          10385.548886951481,
+          19146.115354295325
+        ]
+      },
+      "intervals_valid": true,
+      "coverage": 1.0,
+      "mean_interval_width": 43148.15026180032,
+      "diagnostics": {
+        "rank": 6,
+        "design_columns": 6,
+        "condition_number": 1638982.6389688917,
+        "breusch_pagan_p": 0.7891705262154645,
+        "diagnostic_sample_rows": 40
+      },
+      "out_of_bounds": null,
+      "adjusted_r2": 0.946917919762293
+    },
+    "selected": {
+      "metrics": {
+        "r2": 0.9146921934987652,
+        "mae": 6521.804512092205,
+        "mse": 69081585.5291436,
+        "rmse": 8311.533283885929
+      },
+      "train_metrics": {
+        "r2": 0.951928038088918,
+        "mae": 6560.215291598268,
+        "mse": 82753860.06482093,
+        "rmse": 9096.914865206827
+      },
+      "cv": {
+        "rmse_mean": 9955.259963597524,
+        "rmse_std": 1698.5771864104065,
+        "rows": 40,
+        "folds": 3
+      },
+      "intercept": 45605.025969395996,
+      "coefficients": [
+        {
+          "feature": "R&D Spend",
+          "coefficient": 0.7833838983330456,
+          "vif": 2.2588316172885903
+        },
+        {
+          "feature": "Marketing Spend",
+          "coefficient": 0.03980345134036628,
+          "vif": 2.4250921760639055
+        },
+        {
+          "feature": "State_Florida",
+          "coefficient": -42.028163362587165,
+          "vif": 1.3861653147146455
+        },
+        {
+          "feature": "State_New York",
+          "coefficient": -660.1830557138846,
+          "vif": 1.4038818226332161
+        }
+      ],
+      "sample": {
+        "actual": [
+          134307.35,
+          81005.76,
+          99937.59,
+          64926.08,
+          125370.37,
+          35673.41,
+          105733.54,
+          107404.34,
+          97427.84,
+          122776.86
+        ],
+        "predicted": [
+          127727.31931124192,
+          82776.71796925788,
+          97137.65820813939,
+          45804.18997542224,
+          130345.17071773951,
+          45369.47615577354,
+          109910.0770820743,
+          101753.70700573131,
+          97112.85791093393,
+          112644.6443924544
+        ],
+        "residual": [
+          6580.030688758081,
+          -1770.9579692578845,
+          2799.9317918606102,
+          19121.890024577762,
+          -4974.800717739519,
+          -9696.066155773537,
+          -4176.537082074312,
+          5650.632994268686,
+          314.98208906606305,
+          10132.2156075456
+        ],
+        "obs_ci_lower": [
+          107217.21831791308,
+          62279.683439528235,
+          75622.95752650293,
+          23673.061325302835,
+          109721.59752212401,
+          23218.098979887956,
+          88907.67600323132,
+          81252.51271856911,
+          75866.57413873667,
+          89032.31127813911
+        ],
+        "obs_ci_upper": [
+          148237.42030457134,
+          103273.75249898636,
+          118652.358889778,
+          67935.31862554181,
+          150968.74391335505,
+          67520.85333165932,
+          130912.47816091939,
+          122254.90129289488,
+          118359.14168313448,
+          136256.97750677544
+        ],
+        "mean_ci_lower": [
+          122169.87203488046,
+          77267.68883647124,
+          88587.61008585281,
+          35803.79834303512,
+          124382.55813365435,
+          35324.353545206395,
+          102746.15158346713,
+          96229.22108639248,
+          89262.66354380155,
+          99692.29894560843
+        ],
+        "mean_ci_upper": [
+          133284.76658760395,
+          88285.74710204336,
+          105687.70633042812,
+          55804.58160780953,
+          136307.7833018247,
+          55414.59876634089,
+          117074.00258068358,
+          107278.1929250715,
+          104963.0522780696,
+          125596.9898393061
+        ]
+      },
+      "qq": {
+        "theoretical": [
+          -1.4987672753589756,
+          -0.9849466741389483,
+          -0.6470380273640686,
+          -0.371098189575024,
+          -0.12121408713229873,
+          0.12121408713229859,
+          0.371098189575024,
+          0.6470380273640689,
+          0.9849466741389483,
+          1.4987672753589756
+        ],
+        "observed": [
+          -9696.066155773537,
+          -4974.800717739519,
+          -4176.537082074312,
+          -1770.9579692578845,
+          314.98208906606305,
+          2799.9317918606102,
+          5650.632994268686,
+          6580.030688758081,
+          10132.2156075456,
+          19121.890024577762
+        ]
+      },
+      "intervals_valid": true,
+      "coverage": 1.0,
+      "mean_interval_width": 42758.02549576809,
+      "diagnostics": {
+        "rank": 5,
+        "design_columns": 5,
+        "condition_number": 895373.7529066914,
+        "breusch_pagan_p": 0.6628438032777964,
+        "diagnostic_sample_rows": 40
+      },
+      "out_of_bounds": null,
+      "adjusted_r2": 0.9464340995847944
+    }
+  },
+  "inputs": [
+    {
+      "name": "R&D Spend",
+      "type": "number",
+      "min": 0.0,
+      "max": 165349.2,
+      "default": 75124.20999999999
+    },
+    {
+      "name": "Administration",
+      "type": "number",
+      "min": 51283.14,
+      "max": 182645.56,
+      "default": 120134.70000000001
+    },
+    {
+      "name": "Marketing Spend",
+      "type": "number",
+      "min": 0.0,
+      "max": 471784.1,
+      "default": 249791.995
+    },
+    {
+      "name": "State",
+      "type": "category",
+      "options": [
+        "California",
+        "Florida",
+        "New York"
+      ],
+      "default": "California"
+    }
+  ],
+  "methodology": "Median numeric / most-frequent categorical imputation, drop-first one-hot encoding; fit on training data only. SelectKBest f_regression selects encoded columns on training data. Fixed user k; three-fold training-only CV is descriptive, not test-set tuning.",
+  "interval_caveat": "Classical 95% OLS prediction intervals assume linearity, independent errors, constant variance and approximately normal errors. Selected-model intervals condition on the selected design and omit selection uncertainty. Rank-deficient designs have intervals disabled. No outputs are clipped."
+}
+```

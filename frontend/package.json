@@ -3,10 +3,43 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "scripts": {"dev": "vite --host 0.0.0.0", "build": "tsc -b && vite build", "preview": "vite preview", "test:e2e": "playwright test"},
-  "dependencies": {
-    "@radix-ui/react-slot": "1.2.3", "class-variance-authority": "0.7.1", "clsx": "2.1.1", "tailwind-merge": "3.2.0",
-    "lucide-react": "0.468.0", "plotly.js-dist-min": "2.35.3", "react": "18.3.1", "react-dom": "18.3.1", "react-plotly.js": "2.6.0"
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "test:e2e": "playwright test",
+    "dev:static": "vite --mode static --host 127.0.0.1",
+    "build:static": "tsc -b && vite build --mode static",
+    "preview:static": "vite preview --mode static --host 127.0.0.1",
+    "verify:static": "node scripts/verify-static.mjs",
+    "test:static": "playwright test --config playwright.static.config.ts",
+    "verify:browser": "node scripts/verify-browser.mjs"
   },
-  "devDependencies": {"@playwright/test": "1.51.1", "@types/react": "18.3.20", "@types/react-dom": "18.3.6", "@types/react-plotly.js": "2.6.3", "@types/plotly.js": "2.35.2", "@vitejs/plugin-react": "4.4.1", "autoprefixer": "10.4.21", "postcss": "8.5.3", "tailwindcss": "3.4.17", "typescript": "5.8.3", "vite": "6.3.5"}
+  "dependencies": {
+    "@radix-ui/react-slot": "1.2.3",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "jstat": "1.9.6",
+    "lucide-react": "0.468.0",
+    "ml-matrix": "6.15.1",
+    "papaparse": "5.7.0",
+    "plotly.js-dist-min": "2.35.3",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-plotly.js": "2.6.0",
+    "tailwind-merge": "3.2.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.51.1",
+    "@types/plotly.js": "2.35.2",
+    "@types/react": "18.3.20",
+    "@types/react-dom": "18.3.6",
+    "@types/react-plotly.js": "2.6.3",
+    "@vitejs/plugin-react": "4.4.1",
+    "autoprefixer": "10.4.21",
+    "postcss": "8.5.3",
+    "tailwindcss": "3.4.17",
+    "typescript": "5.8.3",
+    "vite": "6.3.5"
+  }
 }

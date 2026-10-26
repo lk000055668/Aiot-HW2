@@ -14,3 +14,5 @@ playwright-report/
 *.log
 *.tsbuildinfo
 .kaggle/
+
+dist-static/
